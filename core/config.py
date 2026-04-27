@@ -42,10 +42,9 @@ class LLMSettings:
             m.strip()
             for m in os.getenv(
                 "OPENROUTER_MODELS",
-                "google/gemma-2-9b-it:free,"
-                "meta-llama/llama-3.3-70b-instruct:free,"
-                "deepseek/deepseek-r1:free,"
-                "qwen/qwen-2.5-72b-instruct:free",
+                "google/gemma-4-26b-a4b-it:free,"
+                "google/gemma-4-31b-it:free,"
+                "openrouter/free",
             ).split(",")
             if m.strip()
         ]
@@ -58,9 +57,9 @@ class LLMSettings:
     )
 
     # ---- Common ----
-    request_timeout_s: int = int(os.getenv("LLM_TIMEOUT_S", "30"))
-    max_retries_per_model: int = int(os.getenv("LLM_RETRIES", "2"))
-    retry_backoff_s: float = float(os.getenv("LLM_BACKOFF_S", "1.5"))
+    request_timeout_s: int = int(os.getenv("LLM_TIMEOUT_S", "18"))
+    max_retries_per_model: int = int(os.getenv("LLM_RETRIES", "0"))
+    retry_backoff_s: float = float(os.getenv("LLM_BACKOFF_S", "0.75"))
 
 
 @dataclass(frozen=True)

@@ -111,3 +111,19 @@ def test_404_skips_to_next_model_without_retries(monkeypatch):
     assert resp.model == "m3"
     # Each 404'd model should have been tried EXACTLY ONCE — no retries.
     assert prov.calls == ["m1", "m2", "m3"]
+
+
+def test_openrouter_meta_router_is_tried_before_auto_discovered_models():
+    from core.llm.openrouter import OpenRouterProvider
+
+    prov = OpenRouterProvider()
+    prov._discovered = ["inclusionai/ling-2.6-flash:free", "google/gemma-4-31b-it:free"]
+
+    models = prov.models()
+
+    assert models[:3] == [
+        "google/gemma-4-26b-a4b-it:free",
+        "google/gemma-4-31b-it:free",
+        "openrouter/free",
+    ]
+    assert models.index("openrouter/free") < models.index("inclusionai/ling-2.6-flash:free")

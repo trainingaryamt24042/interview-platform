@@ -37,7 +37,7 @@ log = get_logger(__name__)
 
 # Meta-routers — these endpoints always exist and pick a working model
 # for us. They're our insurance against model-id churn.
-META_ROUTERS = ["openrouter/auto", "openrouter/free"]
+META_ROUTERS = ["openrouter/free", "openrouter/auto"]
 
 
 class OpenRouterProvider(LLMProvider):
@@ -61,8 +61,8 @@ class OpenRouterProvider(LLMProvider):
         """
         Build the per-call attempt order:
           1. user-configured OPENROUTER_MODELS (less the dead ones)
-          2. auto-discovered :free models (one-time on first call)
-          3. the two meta-routers as safety nets
+          2. the two meta-routers as safety nets
+          3. auto-discovered :free models (one-time on first call)
 
         Stable order, no duplicates, dead models filtered out.
         """
@@ -73,14 +73,14 @@ class OpenRouterProvider(LLMProvider):
                 if m and m not in ordered and m not in self._dead_models:
                     ordered.append(m)
 
+            for m in META_ROUTERS:
+                if m not in ordered and m not in self._dead_models:
+                    ordered.append(m)
+
             if self._auto_discover_enabled and self._discovered is None:
                 self._discovered = self._discover_free_models()
 
             for m in self._discovered or []:
-                if m not in ordered and m not in self._dead_models:
-                    ordered.append(m)
-
-            for m in META_ROUTERS:
                 if m not in ordered and m not in self._dead_models:
                     ordered.append(m)
 
