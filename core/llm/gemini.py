@@ -1,7 +1,7 @@
 """
 core.llm.gemini
 ---------------
-Google Gemini provider. Default model: gemini-2.5-flash-lite.
+Google Gemini provider. Default model: gemini-2.0-flash-lite.
 """
 
 from __future__ import annotations
@@ -24,7 +24,6 @@ class GeminiProvider(LLMProvider):
 
     def __init__(self) -> None:
         self.cfg = get_settings().llm
-        self._session = requests.Session()
 
     def is_configured(self) -> bool:
         return bool(self.cfg.gemini_api_key)
@@ -53,7 +52,7 @@ class GeminiProvider(LLMProvider):
 
         started = time.time()
         try:
-            resp = self._session.post(
+            resp = requests.post(
                 url,
                 headers={"Content-Type": "application/json"},
                 json=payload,

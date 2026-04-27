@@ -37,7 +37,7 @@ log = get_logger(__name__)
 
 # Meta-routers — these endpoints always exist and pick a working model
 # for us. They're our insurance against model-id churn.
-META_ROUTERS = ["openrouter/free", "openrouter/auto"]
+META_ROUTERS = ["openrouter/auto", "openrouter/free"]
 
 
 class OpenRouterProvider(LLMProvider):
@@ -45,7 +45,6 @@ class OpenRouterProvider(LLMProvider):
 
     def __init__(self) -> None:
         self.cfg = get_settings().llm
-        self._session = requests.Session()
         self._lock = threading.Lock()
         self._dead_models: Set[str] = set()
         self._discovered: List[str] | None = None
@@ -62,8 +61,8 @@ class OpenRouterProvider(LLMProvider):
         """
         Build the per-call attempt order:
           1. user-configured OPENROUTER_MODELS (less the dead ones)
-          2. the two meta-routers as safety nets
-          3. auto-discovered :free models (one-time on first call)
+          2. auto-discovered :free models (one-time on first call)
+          3. the two meta-routers as safety nets
 
         Stable order, no duplicates, dead models filtered out.
         """
@@ -74,14 +73,14 @@ class OpenRouterProvider(LLMProvider):
                 if m and m not in ordered and m not in self._dead_models:
                     ordered.append(m)
 
-            for m in META_ROUTERS:
-                if m not in ordered and m not in self._dead_models:
-                    ordered.append(m)
-
             if self._auto_discover_enabled and self._discovered is None:
                 self._discovered = self._discover_free_models()
 
             for m in self._discovered or []:
+                if m not in ordered and m not in self._dead_models:
+                    ordered.append(m)
+
+            for m in META_ROUTERS:
                 if m not in ordered and m not in self._dead_models:
                     ordered.append(m)
 
@@ -110,7 +109,7 @@ class OpenRouterProvider(LLMProvider):
 
         started = time.time()
         try:
-            resp = self._session.post(
+            resp = requests.post(
                 self.cfg.openrouter_endpoint,
                 headers=headers,
                 json=payload,
@@ -194,7 +193,7 @@ class OpenRouterProvider(LLMProvider):
         the free ones (id ends in ':free'). Returns [] on any failure.
         """
         try:
-            resp = self._session.get(
+            resp = requests.get(
                 "https://openrouter.ai/api/v1/models",
                 headers={"Authorization": f"Bearer {self.cfg.openrouter_api_key}"},
                 timeout=10,
