@@ -21,7 +21,7 @@ load_dotenv()
 class LLMSettings:
     # ---- Gemini (primary) ----
     gemini_api_key: str = os.getenv("GEMINI_API_KEY", "")
-    gemini_model: str = os.getenv("GEMINI_MODEL", "gemini-2.0-flash-lite")
+    gemini_model: str = os.getenv("GEMINI_MODEL", "gemini-2.5-flash-lite")
     gemini_endpoint: str = os.getenv(
         "GEMINI_ENDPOINT",
         "https://generativelanguage.googleapis.com/v1beta/models",

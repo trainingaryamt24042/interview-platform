@@ -45,6 +45,7 @@ class OpenRouterProvider(LLMProvider):
 
     def __init__(self) -> None:
         self.cfg = get_settings().llm
+        self._session = requests.Session()
         self._lock = threading.Lock()
         self._dead_models: Set[str] = set()
         self._discovered: List[str] | None = None
@@ -109,7 +110,7 @@ class OpenRouterProvider(LLMProvider):
 
         started = time.time()
         try:
-            resp = requests.post(
+            resp = self._session.post(
                 self.cfg.openrouter_endpoint,
                 headers=headers,
                 json=payload,
@@ -193,7 +194,7 @@ class OpenRouterProvider(LLMProvider):
         the free ones (id ends in ':free'). Returns [] on any failure.
         """
         try:
-            resp = requests.get(
+            resp = self._session.get(
                 "https://openrouter.ai/api/v1/models",
                 headers={"Authorization": f"Bearer {self.cfg.openrouter_api_key}"},
                 timeout=10,
