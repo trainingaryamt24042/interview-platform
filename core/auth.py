@@ -151,9 +151,14 @@ def lookup_token(token: str) -> Optional[User]:
     if not row:
         return None
     expires = row["expires_at"]
-    # SQLite returns text; Postgres returns datetime.
+    # Normalize to UTC-naive for portable comparison.
+    # SQLite stores TEXT (naive); Postgres returns timezone-aware datetime.
     if isinstance(expires, str):
         expires = datetime.fromisoformat(expires)
+    if expires.tzinfo is not None:
+        # Convert aware datetime to naive UTC.
+        expires = expires.replace(tzinfo=None) if expires.utcoffset() is None \
+                 else (expires - expires.utcoffset()).replace(tzinfo=None)
     if expires < datetime.utcnow():
         revoke_token(token)
         return None

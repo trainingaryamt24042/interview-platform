@@ -33,7 +33,8 @@ RUN pip install -r requirements.txt
 
 COPY core/ ./core/
 COPY api/  ./api/
-COPY cli/  ./cli/
+# Note: cli/ is for local development only and is NOT copied into the
+# production image. Render runs the API server, not the CLI.
 
 # Copy the built frontend so FastAPI can serve it at /
 COPY --from=web /web/frontend/dist /app/frontend_dist

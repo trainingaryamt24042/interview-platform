@@ -12,11 +12,12 @@ The app does NOTHING domain-specific here. All logic is in core.engine.
 from __future__ import annotations
 
 import os
+import traceback
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from api.auth_routes import router as auth_router
@@ -48,6 +49,30 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+# ---------------------------------------------------------------------------
+# Global error handler — log full traceback to stdout (Render captures it),
+# AND return the exception class + message in the JSON body so the operator
+# can diagnose 500s without SSH access to the server.
+# ---------------------------------------------------------------------------
+
+@app.exception_handler(Exception)
+async def _unhandled_exception(request: Request, exc: Exception):
+    tb = traceback.format_exc()
+    log.error(
+        "Unhandled exception on %s %s\n%s",
+        request.method, request.url.path, tb,
+    )
+    # Return a useful but non-secret-leaking error to the client.
+    return JSONResponse(
+        status_code=500,
+        content={
+            "detail": f"Server error: {type(exc).__name__}: {exc}"[:500],
+            "path": request.url.path,
+        },
+    )
+
 
 # All API routes live under /api/v1
 app.include_router(router, prefix="/api/v1")

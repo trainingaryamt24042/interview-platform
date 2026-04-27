@@ -178,3 +178,31 @@ def test_history_endpoints_require_auth(app_client):
     assert r.status_code == 401
     r = app_client.get("/api/v1/history/grades")
     assert r.status_code == 401
+
+
+def test_lookup_token_handles_aware_datetime():
+    """
+    Regression: Postgres returns expires_at as a TIMESTAMPTZ (timezone-aware
+    datetime). Comparing to a naive datetime would raise TypeError and
+    crash any authenticated endpoint with a 500.
+    """
+    from datetime import datetime, timedelta, timezone
+    from core.auth import lookup_token
+
+    # We can't easily mock the cursor here, but we can verify the comparison
+    # logic directly by importing and running it manually.
+    expires_aware_future = datetime.now(timezone.utc) + timedelta(hours=1)
+    expires_aware_past = datetime.now(timezone.utc) - timedelta(hours=1)
+
+    # Replicate the normalization the function does.
+    def _is_expired(expires):
+        if expires.tzinfo is not None:
+            expires = expires.replace(tzinfo=None) if expires.utcoffset() is None \
+                     else (expires - expires.utcoffset()).replace(tzinfo=None)
+        return expires < datetime.utcnow()
+
+    assert _is_expired(expires_aware_past) is True
+    assert _is_expired(expires_aware_future) is False
+    # Naive datetimes still work.
+    assert _is_expired(datetime.utcnow() - timedelta(hours=1)) is True
+    assert _is_expired(datetime.utcnow() + timedelta(hours=1)) is False

@@ -19,28 +19,36 @@ The stack:
 
 ---
 
-## Step 1 — Get a free Postgres from Supabase (2 min)
+## Step 1 — Get a free Postgres from Supabase (3 min)
 
 1. Go to **https://supabase.com** → **Start your project** → sign up with GitHub
 2. Click **New project**:
    - **Name**: `interview-platform`
-   - **Database Password**: pick a strong one — you won't need it again
-     (keep it for emergencies though)
+   - **Database Password**: pick a strong one — copy it somewhere safe, you'll need it in step 4 below
    - **Region**: pick the one closest to you
-3. Wait ~1 minute for provisioning
-4. Once ready, in the project dashboard:
-   - Click **Project Settings** (gear icon, bottom left) → **Database**
-   - Scroll to **Connection string** → click the **URI** tab
-   - **IMPORTANT**: also click **Connection pooling** higher up, switch
-     **Pool mode** to `Transaction`, then copy the URI from there. That URL
-     uses port `6543` and works reliably from serverless platforms.
-   - The URL looks like:
-     ```
-     postgresql://postgres.xxxxxxxxxxxx:[YOUR-PASSWORD]@aws-0-us-east-1.pooler.supabase.com:6543/postgres
-     ```
-   - Replace `[YOUR-PASSWORD]` with the database password you set in step 2.
+   - Click **Create new project**
+3. Wait ~1 minute for provisioning. The page reloads when ready.
+4. **Click the green "Connect" button at the top of the page** (in the header bar, next to the project name).
+5. A dialog opens with several tabs. Click **"Transaction pooler"** — this is the one our app needs.
+6. Copy the connection string. It looks like this:
+   ```
+   postgresql://postgres.xxxxxxxxxxxx:[YOUR-PASSWORD]@aws-0-us-east-1.pooler.supabase.com:6543/postgres
+   ```
+7. **In a text editor**, replace `[YOUR-PASSWORD]` with the actual password you set in step 2, AND append `?sslmode=require` at the end. The final URL should look like:
+   ```
+   postgresql://postgres.xxxxxxxxxxxx:YourRealPassword@aws-0-us-east-1.pooler.supabase.com:6543/postgres?sslmode=require
+   ```
 
-Save this URL — you'll paste it into Render in step 4.
+Save this final URL — you'll paste it into Render in step 4.
+
+> **Why transaction pooler (port 6543)?** It's designed for many short-lived
+> connections, which is exactly how Render's free workers behave. The direct
+> connection (port 5432) would hit the free-tier 60-connection cap quickly.
+
+> **Can't find the Connect button?** Wait until provisioning finishes (the
+> page will reload from a setup wizard to the actual dashboard). If still
+> missing, alternate path: bottom-left **Settings ⚙** → **Database** →
+> **Connection string** section → **Transaction pooler** tab.
 
 ---
 

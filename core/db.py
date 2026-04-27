@@ -84,8 +84,17 @@ def _open_postgres():
     from psycopg.rows import dict_row
 
     url = get_settings().storage.database_url
-    # psycopg accepts postgres:// and postgresql:// URIs natively.
-    conn = psycopg.connect(url, autocommit=False, row_factory=dict_row)
+
+    # The Supabase transaction pooler (port 6543) does NOT support
+    # server-side prepared statements. Setting prepare_threshold=None
+    # tells psycopg to never prepare, which keeps the pooler happy.
+    # Has no negative effect on direct connections or other backends.
+    conn = psycopg.connect(
+        url,
+        autocommit=False,
+        row_factory=dict_row,
+        prepare_threshold=None,
+    )
     return conn
 
 
