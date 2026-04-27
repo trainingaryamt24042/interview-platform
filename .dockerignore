@@ -1,0 +1,16 @@
+.venv
+venv
+__pycache__
+*.pyc
+.pytest_cache
+logs
+data
+*.db
+.env
+.git
+.gitignore
+.vscode
+.idea
+frontend/node_modules
+frontend/dist
+.DS_Store

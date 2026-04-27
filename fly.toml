@@ -1,0 +1,56 @@
+# Fly.io config — alternative to Render.
+#
+# Quickstart:
+#   1. Install flyctl: https://fly.io/docs/hands-on/install-flyctl/
+#   2. fly auth signup
+#   3. fly launch --no-deploy           (creates the app, edit name below first)
+#   4. fly volumes create data --size 1 --region <your-region>
+#   5. fly secrets set \
+#         GEMINI_API_KEY=...             \
+#         OPENROUTER_API_KEY=...         \
+#         AUTH_SECRET_KEY="$(openssl rand -hex 32)"
+#   6. fly deploy
+#
+# Free allowance: shared-cpu-1x VM with 256 MB RAM, 1 GB persistent volume,
+# 160 GB outbound bandwidth/month. Plenty for a demo.
+
+app = "interview-platform"           # change to a globally-unique name
+primary_region = "bom"               # Mumbai — pick the closest to your users
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  AUTH_COOKIE_SAMESITE = "lax"
+  AUTH_COOKIE_SECURE   = "1"
+  SERVE_FRONTEND       = "1"
+  DATABASE_URL         = "sqlite:////data/interview.db"
+  LLM_TIMEOUT_S        = "30"
+  LLM_RETRIES          = "2"
+  LLM_BACKOFF_S        = "1.5"
+  OPENROUTER_AUTO_DISCOVER = "1"
+  LOG_LEVEL            = "INFO"
+  PYTHONUNBUFFERED     = "1"
+
+[http_service]
+  internal_port = 8000
+  force_https   = true
+  auto_stop_machines  = "stop"        # save free hours when idle
+  auto_start_machines = true
+  min_machines_running = 0
+
+  [http_service.checks]
+    grace_period   = "10s"
+    interval       = "30s"
+    method         = "GET"
+    timeout        = "5s"
+    path           = "/api/v1/health"
+
+[mounts]
+  source      = "data"
+  destination = "/data"
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus     = 1
+  memory   = "256mb"
